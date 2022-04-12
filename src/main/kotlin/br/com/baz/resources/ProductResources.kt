@@ -1,6 +1,7 @@
 package br.com.baz.resources
 
 
+import br.com.baz.FindByIdServiceRequest
 import br.com.baz.ProductServiceRequest
 import br.com.baz.ProductServiceResponse
 import br.com.baz.ProductsServiceGrpc
@@ -25,6 +26,25 @@ class ProductResources(
                 quantity_in_stock = payload.quantityInStock
             )
             val productRes = productService.create(productReq)
+            val productResponse = ProductServiceResponse.newBuilder()
+                .setId(productRes.id)
+                .setName(productRes.name)
+                .setPrice(productRes.price)
+                .setQuantityInStock(productRes.quantity_in_stock)
+                .build()
+
+            responseObserver?.onNext(productResponse)
+            responseObserver?.onCompleted()
+        }catch (ex: BaseBusinessException) {
+            responseObserver?.onError(ex.statusCode().toStatus()
+                .withDescription(ex.errorMessage()).asRuntimeException()
+            )
+        }
+    }
+
+    override fun findById(request: FindByIdServiceRequest?, responseObserver: StreamObserver<ProductServiceResponse>?) {
+        try {
+            val productRes = productService.findById(request!!.id)
             val productResponse = ProductServiceResponse.newBuilder()
                 .setId(productRes.id)
                 .setName(productRes.name)
